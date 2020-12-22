@@ -17,9 +17,11 @@
 
 #include <vector>
 #include <cstring>
-
+#include <fstream>
+#include <iostream>
 #include <mutex>
 #include <thread>
+
 #include <sys/times.h>
 #include <signal.h>
 
@@ -164,6 +166,9 @@ int main() {
     unsigned int frameCounter, frameProcessed, priority;
     size_t recvd_size;
 
+    std::ofstream timeFile;
+    timeFile.open("perf_test/times.txt", std::ios_base::out);
+
 
     while(true) {
         
@@ -204,11 +209,16 @@ int main() {
         cv::Mat image = drawer.draw();
 
         
-        imageProcessedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+       
         
         //std::cout << "Frame was processed in " << imageProcessedTime - imageCaptureTime << " milliseconds" << std::endl;
         
         cv::imshow("Real-Time Face Censure", image);
+
+        imageProcessedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+        
+        timeFile << imageProcessedTime - imageCaptureTime << std::endl;
+        timeFile.flush();
 
         char c = (char)cv::waitKey(1);
         

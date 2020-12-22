@@ -123,8 +123,9 @@ int main(int argc, char **argv) {
     cv::Mat frame;
     FrameSender frameSender;
     
-
-    capture.open(CAPTURE_OPEN_VALUE);
+    if (!capture.open(0))
+        capture.open(-1);
+    //capture.open(CAPTURE_OPEN_VALUE);
 
     struct shm_remove
     {
