@@ -123,9 +123,8 @@ int main(int argc, char **argv) {
     cv::Mat frame;
     FrameSender frameSender;
     
-    if (!capture.open(0))
-        capture.open(-1);
-    //capture.open(CAPTURE_OPEN_VALUE);
+
+    capture.open(CAPTURE_OPEN_VALUE);
 
     struct shm_remove
     {
@@ -161,7 +160,7 @@ int main(int argc, char **argv) {
     
 
     shared_memory_object segment(create_only, FRAME_SHMEM_NAME, read_write);
-    segment.truncate(frame.cols * frame.rows * frame.channels() + sizeof(int64_t) + sizeof(int));
+    segment.truncate(frame.cols * frame.rows * frame.channels() + sizeof(int64_t));
     mapped_region region(segment, read_write);
 
 
@@ -192,7 +191,6 @@ int main(int argc, char **argv) {
 
 
         int64_t imageCaptureTime;
-        unsigned int frameCounter = 0;
 		while (true)
 		{
             capture >> frame;
@@ -209,11 +207,9 @@ int main(int argc, char **argv) {
                 prev = std::chrono::high_resolution_clock::now();
 
                 mutexFrame.lock();
-                memcpy(region.get_address(), &frameCounter, sizeof(unsigned int));
-                memcpy(region.get_address() + sizeof(int), &imageCaptureTime, sizeof(int64_t));
-                memcpy(region.get_address() + sizeof(int64_t) + sizeof(int), frame.data, frame.cols * frame.rows * frame.channels());
+                memcpy(region.get_address(), &imageCaptureTime, sizeof(int64_t));
+                memcpy(region.get_address() + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());
                 mutexFrame.unlock();
-                ++frameCounter;
             }
 	    }
     }

@@ -91,7 +91,7 @@ cv::Mat BlurDrawer::draw() {
     //fill face rect
      if( mode == 0) {
 
-         cv::Scalar color(0, 0, 200);//red
+         cv::Scalar color(0, 0, 0);//red
          
          int frame_thickness = -1;//fill
          for (const auto &r : face_list) {
@@ -163,27 +163,30 @@ int main() {
     mutexFramesize.unlock();
 
     int64_t imageProcessedTime, imageCaptureTime;
-    unsigned int frameCounter, frameProcessed, priority;
+    unsigned int priority;
     size_t recvd_size;
 
+    char whatever;
+
     std::ofstream timeFile;
-    timeFile.open("perf_test/times.txt", std::ios_base::out);
+    if(SAVE_PROCESSING_TIME) {
+        timeFile.open("perf_test/times.txt", std::ios_base::out);
+    }
 
 
     while(true) {
         
         mutexFrame.lock();
-        memcpy(&frameCounter, regionFrame.get_address(), sizeof(unsigned int));
-        memcpy(&imageCaptureTime, regionFrame.get_address() + sizeof(unsigned int), sizeof(int64_t));
+        memcpy(&imageCaptureTime, regionFrame.get_address(), sizeof(int64_t));
         cv::Mat img(framesize[0], framesize[1],
                             CV_8UC3,
-                            regionFrame.get_address() + sizeof(int64_t) + sizeof(unsigned int),
+                            regionFrame.get_address() + sizeof(int64_t),
                             cv::Mat::AUTO_STEP);
 
         mutexFrame.unlock();
         
         if(SYNC_BC)
-            bc_mq.receive(&frameProcessed, sizeof(frameProcessed), recvd_size, priority);
+            bc_mq.receive(&whatever, sizeof(whatever), recvd_size, priority);
 
         mutexBC.lock();
 
@@ -211,14 +214,14 @@ int main() {
         
        
         
-        //std::cout << "Frame was processed in " << imageProcessedTime - imageCaptureTime << " milliseconds" << std::endl;
-        
         cv::imshow("Real-Time Face Censure", image);
 
         imageProcessedTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
         
-        timeFile << imageProcessedTime - imageCaptureTime << std::endl;
-        timeFile.flush();
+        if(SAVE_PROCESSING_TIME) {        
+            timeFile << imageProcessedTime - imageCaptureTime << std::endl;
+            timeFile.flush();
+        }
 
         char c = (char)cv::waitKey(1);
         

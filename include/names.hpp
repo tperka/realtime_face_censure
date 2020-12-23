@@ -3,6 +3,7 @@
 
 #define CAPTURE_OPEN_VALUE 0
 #define SYNC_BC 1
+#define SAVE_PROCESSING_TIME 0
 
 #define FRAME_SHMEM_NAME "ac_shmem"
 #define FRAME_MUTEX_NAME "ac_mutex"

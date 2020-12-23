@@ -67,7 +67,7 @@ FaceDetector::FaceDetector() :
         mean_val({104., 177.0, 123.0}) {
     detection_network = cv::dnn::readNetFromCaffe(FACE_DETECTION_CONFIGURATION, FACE_DETECTION_WEIGHTS);
     if (detection_network.empty()) {
-        std::cout<<"err reading network";
+        std::cerr<<"ERROR: could not read network";
     }
 
 
@@ -124,7 +124,7 @@ int main () {
          (boost::interprocess::create_only               //only create
          ,BC_SYNC_Q_NAME    //name
          ,500                        //max message number
-         ,sizeof(unsigned int)               //max message size
+         ,sizeof(char)               //max message size
          );
 
 
@@ -167,20 +167,19 @@ int main () {
     mutexFramesize.unlock();
 
     int64_t imageProcessedTime, imageCaptureTime;
-    unsigned int frameCounter;
 
 
     FaceDetector face_detector;
+    char whatever = 1;
 
     while(true) {
   
         
         mutexFrame.lock();
-        memcpy(&frameCounter, regionFrame.get_address(), sizeof(unsigned int));
-        memcpy(&imageCaptureTime, regionFrame.get_address() + sizeof(unsigned int), sizeof(int64_t));
+        memcpy(&imageCaptureTime, regionFrame.get_address(), sizeof(int64_t));
         cv::Mat img(framesize[0], framesize[1],
                             CV_8UC3,
-                            regionFrame.get_address() + sizeof(int64_t) + sizeof(unsigned int),
+                            regionFrame.get_address() + sizeof(int64_t),
                             cv::Mat::AUTO_STEP);
         mutexFrame.unlock();
 
@@ -198,8 +197,9 @@ int main () {
         //copy all found faces into region
         memcpy(facesRegion.get_address(), facesArray, sizeof(facesArray));
 
+
         if(SYNC_BC)
-            bc_mq.send(&frameCounter, sizeof(frameCounter), 0);
+            bc_mq.send(&whatever, sizeof(whatever), 0);
 
         mutexFaces.unlock();
 

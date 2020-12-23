@@ -3,6 +3,7 @@ from collections import Counter
 
 with open('times.txt', 'r') as fp:
     times = tuple(map(int, fp.readlines()))
+    times = times[10:]
     print('N = ', len(times))
     print('mean: ', statistics.mean(times))
     print('stdev: ', statistics.stdev(times))
