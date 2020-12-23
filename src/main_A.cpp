@@ -45,9 +45,11 @@ void handleSIGINT(int sig)
 class FrameSender{
 private:
 
+    // upper fps limit
     int _fps;
-    bool _fpsChanged = false;
+    // 1/fps -- the minimal time (minus a delta to make the limit less strict) between consecutive frame sendings
     std::chrono::duration<double> _frameTime;
+    // used for synchronization with the thread responsible for receiving new fps limit values from the UI 
     std::mutex _fpsMutex;
 
     
@@ -70,18 +72,9 @@ public:
     void setFrameTime(int fps){
         std::cout << "Changing fps to: " << fps << std::endl;
         _fpsMutex.lock();
-        _fpsChanged = true;
         _fps = fps;
         _frameTime = std::chrono::duration<double>(1.0/_fps);
         _fpsMutex.unlock();
-    }
-
-    bool isFpsChanged(){
-        _fpsMutex.lock();
-        bool return_val = _fpsChanged;
-        _fpsChanged = false;
-        _fpsMutex.unlock();
-        return return_val;
     }
 
     int getFps(){
@@ -93,7 +86,8 @@ public:
 
 };
 
-
+// responsible for receiving information about new fps limits from the UI
+// meant to run in a helper thread, since the receive() method is a blocking operation
 void waitForFpsChange(FrameSender & s){
 
     message_queue fps_mq
@@ -124,7 +118,13 @@ int main(int argc, char **argv) {
     FrameSender frameSender;
     
 
-    capture.open(CAPTURE_OPEN_VALUE);
+    // some cameras require a different open value
+    if (!capture.open(CAPTURE_OPEN_VALUE))
+        capture.open(CAPTURE_OPEN_VALUE_2);
+
+
+    // =================================
+    // INITIAL IPC OBJECTS SETUP BEGIN
 
     struct shm_remove
     {
@@ -154,12 +154,14 @@ int main(int argc, char **argv) {
 
     named_mutex mutexFrame(create_only, FRAME_MUTEX_NAME);
     named_mutex mutexFramesize(create_only, FRAMESIZE_MUTEX);
-    
+    shared_memory_object segment(create_only, FRAME_SHMEM_NAME, read_write);
+
+    // INITIAL IPC OBJECTS SETUP END
+    // =================================
+
+
     capture >> frame;
 
-    
-
-    shared_memory_object segment(create_only, FRAME_SHMEM_NAME, read_write);
     segment.truncate(frame.cols * frame.rows * frame.channels() + sizeof(int64_t));
     mapped_region region(segment, read_write);
 
@@ -185,27 +187,32 @@ int main(int argc, char **argv) {
     if (capture.isOpened()){
 
 		std::cout << "Video capture started" << std::endl;
-        auto start = std::chrono::high_resolution_clock::now();
-        std::chrono::milliseconds delta(5);
-        auto prev = std::chrono::system_clock::from_time_t(0);
 
-
+        std::chrono::milliseconds delta(5);                    // leeway for the check if frame came within the frameTime allowed
+        auto prev = std::chrono::system_clock::from_time_t(0); // time the last frame was processed
         int64_t imageCaptureTime;
+
 		while (true)
 		{
             capture >> frame;
             imageCaptureTime = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
              if (frame.empty()){
-                std::cout << "frame empty" << std::endl;
+                std::cerr << "Error: The image received from the camera is empty" << std::endl;
 				break;
             }
 
+            // measure time since the last frame was processed
             auto time_elapsed = std::chrono::high_resolution_clock::now() - prev;
 
+            // if last frame was processed long ago enough to keep up with the fps limit (minus delta) we can process this frame
+            // otherwise this frame is skipped and we collect the next one   
             if (time_elapsed >= (frameSender.getFrameTime() - delta)){
+                // since this frame was chosen for processing, the time measurement of last frame processed starts now
                 prev = std::chrono::high_resolution_clock::now();
 
+
+                // synchronize access and put the frame into shared memory
                 mutexFrame.lock();
                 memcpy(region.get_address(), &imageCaptureTime, sizeof(int64_t));
                 memcpy((unsigned char*)(region.get_address()) + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());

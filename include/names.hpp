@@ -2,6 +2,7 @@
 #define NAMES_HPP
 
 #define CAPTURE_OPEN_VALUE 0
+#define CAPTURE_OPEN_VALUE_2 -1
 #define SYNC_BC 1
 #define SAVE_PROCESSING_TIME 0
 

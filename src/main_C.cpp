@@ -52,6 +52,8 @@ private:
     int mode;//blur mode
     std::mutex mode_mutex;
 
+    static const int DEFAULT_MODE = 0;
+
 public:
     BlurDrawer(cv::Mat input_image, std::vector<cv::Rect> list, int x);
 
@@ -75,7 +77,7 @@ public:
 
     }
     BlurDrawer(){
-        mode = 0;
+        mode = DEFAULT_MODE;
     }
 };
 
@@ -109,6 +111,9 @@ cv::Mat BlurDrawer::draw() {
 
 }
 
+
+// responsible for receiving information about censure mode change from the UI
+// meant to run in a helper thread, since the receive() method is a blocking operation
 void wait_for_mode_change(BlurDrawer & drawer){
 
     message_queue mq
