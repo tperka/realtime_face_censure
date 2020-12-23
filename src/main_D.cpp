@@ -280,8 +280,8 @@ int main(int argc, char const *argv[])
     
     pid = fork();
     if(pid == 0) {
-        char* args[] = {"./A.out", NULL};
-        execvp(args[0], args);
+        char* args[] = {(char*)"./A.out", NULL};
+        execv(args[0], args);
         cerr << "Could not execv..." << endl;
     }
     childrenPids[0] = pid;
@@ -290,8 +290,8 @@ int main(int argc, char const *argv[])
 
     pid = fork();
     if(pid == 0) {
-        char* args[] = {"./B.out", NULL};
-        execvp(args[0], args);
+        char* args[] = {(char*)"./B.out", NULL};
+        execv(args[0], args);
         cerr << "Could not execv..." << endl;
     }
     childrenPids[1] = pid;
@@ -300,8 +300,8 @@ int main(int argc, char const *argv[])
     
     pid = fork();
     if(pid == 0) {
-        char* args[] = {"./C.out", NULL};
-        execvp(args[0], args);
+        char* args[] = {(char*)"./C.out", NULL};
+        execv(args[0], args);
         cerr << "Could not execv..." << endl;
     }
     childrenPids[2] = pid;

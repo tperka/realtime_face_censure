@@ -47,7 +47,7 @@ private:
 
     int _fps;
     bool _fpsChanged = false;
-    std::chrono::duration<double> _frameRate;
+    std::chrono::duration<double> _frameTime;
     std::mutex _fpsMutex;
 
     
@@ -56,23 +56,23 @@ public:
     static const int DEFAULT_FPS = 30;
 
     FrameSender(){
-        setFrameRate(DEFAULT_FPS);
+        setFrameTime(DEFAULT_FPS);
     }
 
-    std::chrono::duration<double> getFrameRate(){
+    std::chrono::duration<double> getFrameTime(){
         _fpsMutex.lock();
-        auto rate = _frameRate;
+        auto rate = _frameTime;
         _fpsMutex.unlock();
         return rate;
 
     }
 
-    void setFrameRate(int fps){
+    void setFrameTime(int fps){
         std::cout << "Changing fps to: " << fps << std::endl;
         _fpsMutex.lock();
         _fpsChanged = true;
         _fps = fps;
-        _frameRate = std::chrono::duration<double>(1.0/_fps);
+        _frameTime = std::chrono::duration<double>(1.0/_fps);
         _fpsMutex.unlock();
     }
 
@@ -107,7 +107,7 @@ void waitForFpsChange(FrameSender & s){
 
     while(true){
         fps_mq.receive(&new_fps, sizeof(new_fps), recvd_size, priority);
-        s.setFrameRate(new_fps);
+        s.setFrameTime(new_fps);
       }
 }
 
@@ -203,12 +203,12 @@ int main(int argc, char **argv) {
 
             auto time_elapsed = std::chrono::high_resolution_clock::now() - prev;
 
-            if (time_elapsed >= (frameSender.getFrameRate() - delta)){
+            if (time_elapsed >= (frameSender.getFrameTime() - delta)){
                 prev = std::chrono::high_resolution_clock::now();
 
                 mutexFrame.lock();
                 memcpy(region.get_address(), &imageCaptureTime, sizeof(int64_t));
-                memcpy(region.get_address() + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());
+                memcpy((unsigned char*)(region.get_address()) + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());
                 mutexFrame.unlock();
             }
 	    }

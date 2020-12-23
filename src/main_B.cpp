@@ -179,7 +179,7 @@ int main () {
         memcpy(&imageCaptureTime, regionFrame.get_address(), sizeof(int64_t));
         cv::Mat img(framesize[0], framesize[1],
                             CV_8UC3,
-                            regionFrame.get_address() + sizeof(int64_t),
+                            (unsigned char*)(regionFrame.get_address()) + sizeof(int64_t),
                             cv::Mat::AUTO_STEP);
         mutexFrame.unlock();
 
