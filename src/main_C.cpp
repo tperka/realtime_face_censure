@@ -105,6 +105,7 @@ cv::Mat BlurDrawer::draw() {
          //add gaussian blur on face rect
      } else if (mode == 1) {
          for (const auto &r : face_list) {
+             //increasing sigma X val strengthen blur
              cv::GaussianBlur(image(r), image(r), cv::Size(0,0), 11);
          }
      }
