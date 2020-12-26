@@ -26,10 +26,11 @@
 using namespace boost::interprocess;
 
 
-
+// vars used to calculate CPU usage by comparing CPU time used and real time passed
 tms cpuStart, cpuEnd;
 time_t realStart, realEnd;
 
+//program termination coming from process D, calculate and print CPU usage and exit
 void handleSIGINT(int sig)
 {
     long realTime, cpuTime;
@@ -110,6 +111,7 @@ void waitForFpsChange(FrameSender & s){
 
 int main(int argc, char **argv) {
     
+    //here we define a signal handler and start CPU time tracking to display average CPU usage of the process at the exit
     signal(SIGINT, handleSIGINT);
     realStart = times(&cpuStart);
 
@@ -118,7 +120,7 @@ int main(int argc, char **argv) {
     FrameSender frameSender;
     
 
-    // some cameras require a different open value
+    // some cameras require a different open value, if needed, change it in names.hpp
     if (!capture.open(CAPTURE_OPEN_VALUE))
         capture.open(CAPTURE_OPEN_VALUE_2);
 
@@ -152,32 +154,38 @@ int main(int argc, char **argv) {
         ~mutex_remove2(){ named_mutex::remove(FRAMESIZE_MUTEX); }
     } mutex_remover2;
 
-    named_mutex mutexFrame(create_only, FRAME_MUTEX_NAME);
+    //mutex used to guard shared memory with frame size
     named_mutex mutexFramesize(create_only, FRAMESIZE_MUTEX);
-    shared_memory_object segment(create_only, FRAME_SHMEM_NAME, read_write);
-
-    // INITIAL IPC OBJECTS SETUP END
-    // =================================
-
-
-    capture >> frame;
-
-    segment.truncate(frame.cols * frame.rows * frame.channels() + sizeof(int64_t));
-    mapped_region region(segment, read_write);
-
-
-
-    mutexFramesize.lock();
     
     shared_memory_object framesizeInfo(create_only, FRAMESIZE_SHMEM, read_write);
     framesizeInfo.truncate(3*sizeof(long));
     mapped_region framesizeRegion(framesizeInfo, read_write);
-    long tocopy[3] = {frame.rows, frame.cols, frame.channels()};
+
+
+
+    //read first frame to obtain information about capture, much easier than using capture.get()
+    capture >> frame;
+
+    //use obtained info to define shmem size
+    //mutex used to guard frame shared memory
+    named_mutex mutexFrame(create_only, FRAME_MUTEX_NAME);
+    shared_memory_object frameShmem(create_only, FRAME_SHMEM_NAME, read_write);
+    //in this shmem we will store frame data + timestamp of capture thus we need additional int64_t
+    frameShmem.truncate(frame.cols * frame.rows * frame.channels() + sizeof(int64_t));
+    mapped_region frameRegion(frameShmem, read_write);
+
+    // INITIAL IPC OBJECTS SETUP END
+    // =================================
+
+    //send dimensions and frame type (colors palette etc.) to B and C
+    mutexFramesize.lock();
+    
+    long tocopy[3] = {frame.rows, frame.cols, frame.type()};
     memcpy(framesizeRegion.get_address(), tocopy, sizeof(tocopy));
 
     mutexFramesize.unlock();
     
-    
+    //start a new thread which listens to coming FPS change
     std::thread fpsListener(waitForFpsChange, std::ref(frameSender));
     
     std::cout << "FPS: " << frameSender.getFps() << std::endl << "dimensions: " << frame.cols << "x" << frame.rows << std::endl;
@@ -212,10 +220,10 @@ int main(int argc, char **argv) {
                 prev = std::chrono::high_resolution_clock::now();
 
 
-                // synchronize access and put the frame into shared memory
+                // synchronize access and put the frame with its capture's timestamp into shared memory
                 mutexFrame.lock();
-                memcpy(region.get_address(), &imageCaptureTime, sizeof(int64_t));
-                memcpy((unsigned char*)(region.get_address()) + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());
+                memcpy(frameRegion.get_address(), &imageCaptureTime, sizeof(int64_t));
+                memcpy((unsigned char*)(frameRegion.get_address()) + sizeof(int64_t), frame.data, frame.cols * frame.rows * frame.channels());
                 mutexFrame.unlock();
             }
 	    }

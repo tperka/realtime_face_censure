@@ -18,10 +18,11 @@
 
 using namespace boost::interprocess;
 
-
+// vars used to calculate CPU usage by comparing CPU time used and real time passed
 tms cpuStart, cpuEnd;
 time_t realStart, realEnd;
 
+//program termination coming from process D, calculate and print CPU usage and exit
 void handleSIGINT(int sig)
 {
     long realTime, cpuTime;
@@ -65,6 +66,7 @@ FaceDetector::FaceDetector() :
         image_height(300),
         image_scale(1.0),
         mean_val({104., 177.0, 123.0}) {
+    //detection network read from files which are in ./assets/ directory, pretrained and written by 
     detection_network = cv::dnn::readNetFromCaffe(FACE_DETECTION_CONFIGURATION, FACE_DETECTION_WEIGHTS);
     if (detection_network.empty()) {
         std::cerr<<"ERROR: could not read network";
@@ -93,6 +95,11 @@ std::vector<int> FaceDetector::detected_face(const cv::Mat &frame) {
             //right top pixel
             int x2 = static_cast<int>(detection_matrix.at<float>(i, 5) * frame.cols);
             int y2 = static_cast<int>(detection_matrix.at<float>(i, 6) * frame.rows);
+            
+            //we need to store primitive values needed to construct a cv::Rect so we can put them into shmem
+            //since objects of custom class in shmem cause multiple problems
+
+            //we store x,y of left bottom pixel, width and height
             faces.push_back(x1);
             faces.push_back(y1);
             faces.push_back(x2 - x1);
@@ -101,6 +108,7 @@ std::vector<int> FaceDetector::detected_face(const cv::Mat &frame) {
         }
 
     }
+    //insert size of array as first element so process C can read it
     faces.insert(faces.begin(), faces.size());
     return faces;
 
@@ -110,10 +118,15 @@ std::vector<int> FaceDetector::detected_face(const cv::Mat &frame) {
 
 
 int main () {
-
+    //here we define a signal handler and start CPU time tracking to display average CPU usage of the process at the exit
     signal(SIGINT, handleSIGINT);
     realStart = times(&cpuStart);
     
+    // =================================
+    // INITIAL IPC OBJECTS SETUP BEGIN
+
+    //removers make sure that IPC resource does get removed and we will not have errors creating a new ones
+
     //syncing with process C
     struct q_remover{
         q_remover(){ boost::interprocess::message_queue::remove(BC_SYNC_Q_NAME); }
@@ -160,6 +173,9 @@ int main () {
 
     shared_memory_object framesizeInfo(open_only, FRAMESIZE_SHMEM, read_only);
     mapped_region framesizeRegion(framesizeInfo, read_only);
+    // INITIAL IPC OBJECTS SETUP END
+    // =================================
+
     long framesize[3];
    
     mutexFramesize.lock();
@@ -170,7 +186,9 @@ int main () {
 
 
     FaceDetector face_detector;
-    char whatever = 1;
+    
+    //this value is ignored, but needed to communicate via message q
+    char whatever = 0;
 
     while(true) {
   
@@ -178,7 +196,7 @@ int main () {
         mutexFrame.lock();
         memcpy(&imageCaptureTime, regionFrame.get_address(), sizeof(int64_t));
         cv::Mat img(framesize[0], framesize[1],
-                            CV_8UC3,
+                            framesize[2],
                             (unsigned char*)(regionFrame.get_address()) + sizeof(int64_t),
                             cv::Mat::AUTO_STEP);
         mutexFrame.unlock();
@@ -198,6 +216,8 @@ int main () {
         memcpy(facesRegion.get_address(), facesArray, sizeof(facesArray));
 
 
+        //if synchro with C is enabled (it's recommended) than the C will wait until B processes the frame and put detected faces
+        //into shmem, which happens here
         if(SYNC_BC)
             bc_mq.send(&whatever, sizeof(whatever), 0);
 
