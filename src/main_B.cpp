@@ -61,12 +61,15 @@ public:
 
 
 FaceDetector::FaceDetector() :
+        //increasing confidence val is not recommended, deacreasing will cause false-positves
         confidence_threshold(0.5),
         image_width(300),
         image_height(300),
         image_scale(1.0),
+        //values model was trained with
         mean_val({104., 177.0, 123.0}) {
-    //detection network read from files which are in ./assets/ directory, pretrained and written by 
+    //detection network model files (.prototext configuration and .caffemodel binary)
+    //source github.com/spmallick/learnopencv/tree/master/FaceDetectionComparison/models
     detection_network = cv::dnn::readNetFromCaffe(FACE_DETECTION_CONFIGURATION, FACE_DETECTION_WEIGHTS);
     if (detection_network.empty()) {
         std::cerr<<"ERROR: could not read network";
@@ -76,8 +79,10 @@ FaceDetector::FaceDetector() :
 }
 
 std::vector<int> FaceDetector::detected_face(const cv::Mat &frame) {
+    //transform frame to data blop (resize and rescale img)
     cv::Mat input_blob = cv::dnn::blobFromImage(frame, image_scale, cv::Size(image_width, image_height), mean_val, false, false);
 
+    //forward blop through network and save data in detection_matrix
     detection_network.setInput(input_blob, "data");
     cv::Mat detection = detection_network.forward("detection_out");
     cv::Mat detection_matrix(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
