@@ -6,3 +6,4 @@ build/
 CMakeCache.txt
 cmake_install.cmake
 perf_test/*.txt
+Makefile

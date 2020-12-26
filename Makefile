@@ -162,65 +162,113 @@ B.out/fast:
 	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/build
 .PHONY : B.out/fast
 
-# target to build an object file
-src/main_A.o:
-	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.o
+src/main_A.o: src/main_A.cpp.o
+
 .PHONY : src/main_A.o
 
-# target to preprocess a source file
-src/main_A.i:
-	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.i
+# target to build an object file
+src/main_A.cpp.o:
+	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.cpp.o
+.PHONY : src/main_A.cpp.o
+
+src/main_A.i: src/main_A.cpp.i
+
 .PHONY : src/main_A.i
 
-# target to generate assembly for a file
-src/main_A.s:
-	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.s
+# target to preprocess a source file
+src/main_A.cpp.i:
+	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.cpp.i
+.PHONY : src/main_A.cpp.i
+
+src/main_A.s: src/main_A.cpp.s
+
 .PHONY : src/main_A.s
 
-# target to build an object file
-src/main_B.o:
-	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.o
+# target to generate assembly for a file
+src/main_A.cpp.s:
+	$(MAKE) -f CMakeFiles/A.out.dir/build.make CMakeFiles/A.out.dir/src/main_A.cpp.s
+.PHONY : src/main_A.cpp.s
+
+src/main_B.o: src/main_B.cpp.o
+
 .PHONY : src/main_B.o
 
-# target to preprocess a source file
-src/main_B.i:
-	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.i
+# target to build an object file
+src/main_B.cpp.o:
+	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.cpp.o
+.PHONY : src/main_B.cpp.o
+
+src/main_B.i: src/main_B.cpp.i
+
 .PHONY : src/main_B.i
 
-# target to generate assembly for a file
-src/main_B.s:
-	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.s
+# target to preprocess a source file
+src/main_B.cpp.i:
+	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.cpp.i
+.PHONY : src/main_B.cpp.i
+
+src/main_B.s: src/main_B.cpp.s
+
 .PHONY : src/main_B.s
 
-# target to build an object file
-src/main_C.o:
-	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.o
+# target to generate assembly for a file
+src/main_B.cpp.s:
+	$(MAKE) -f CMakeFiles/B.out.dir/build.make CMakeFiles/B.out.dir/src/main_B.cpp.s
+.PHONY : src/main_B.cpp.s
+
+src/main_C.o: src/main_C.cpp.o
+
 .PHONY : src/main_C.o
 
-# target to preprocess a source file
-src/main_C.i:
-	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.i
+# target to build an object file
+src/main_C.cpp.o:
+	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.cpp.o
+.PHONY : src/main_C.cpp.o
+
+src/main_C.i: src/main_C.cpp.i
+
 .PHONY : src/main_C.i
 
-# target to generate assembly for a file
-src/main_C.s:
-	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.s
+# target to preprocess a source file
+src/main_C.cpp.i:
+	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.cpp.i
+.PHONY : src/main_C.cpp.i
+
+src/main_C.s: src/main_C.cpp.s
+
 .PHONY : src/main_C.s
 
-# target to build an object file
-src/main_D.o:
-	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.o
+# target to generate assembly for a file
+src/main_C.cpp.s:
+	$(MAKE) -f CMakeFiles/C.out.dir/build.make CMakeFiles/C.out.dir/src/main_C.cpp.s
+.PHONY : src/main_C.cpp.s
+
+src/main_D.o: src/main_D.cpp.o
+
 .PHONY : src/main_D.o
 
-# target to preprocess a source file
-src/main_D.i:
-	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.i
+# target to build an object file
+src/main_D.cpp.o:
+	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.cpp.o
+.PHONY : src/main_D.cpp.o
+
+src/main_D.i: src/main_D.cpp.i
+
 .PHONY : src/main_D.i
 
-# target to generate assembly for a file
-src/main_D.s:
-	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.s
+# target to preprocess a source file
+src/main_D.cpp.i:
+	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.cpp.i
+.PHONY : src/main_D.cpp.i
+
+src/main_D.s: src/main_D.cpp.s
+
 .PHONY : src/main_D.s
+
+# target to generate assembly for a file
+src/main_D.cpp.s:
+	$(MAKE) -f CMakeFiles/D.out.dir/build.make CMakeFiles/D.out.dir/src/main_D.cpp.s
+.PHONY : src/main_D.cpp.s
 
 # Help Target
 help:
