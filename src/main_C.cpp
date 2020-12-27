@@ -1,3 +1,8 @@
+// This process is responsible for receiving frames from the camera sent by process A,
+// receiving coordinates of all faces in the picture from process B, applying censure to them
+// and drawing the resulting picture onto the screen.
+// This process can receive requests to change the censure mode from process D, which is responsible for the UI.
+
 #include "names.hpp"
 
 

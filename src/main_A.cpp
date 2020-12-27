@@ -1,3 +1,7 @@
+// This process is responsible for receiving video from the camera, extracting separate frames from it,
+// and forwarding them at a capped rate to processes B and C.
+// This process can receive requests to change the sending rate from process D, which is responsible for the UI.
+
 // #include <opencv4/opencv2/opencv.hpp>
 #include <opencv2/opencv.hpp>
 #include <chrono>

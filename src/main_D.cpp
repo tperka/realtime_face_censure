@@ -1,3 +1,7 @@
+// This process is responsible for starting and killing all the other processes,
+// and for providing a user interface. It makes it possible to change the scheduling
+// parameters of the child processes, as well as their other options.
+
 #include <iostream>
 //#include <menu.h>
 

@@ -1,3 +1,6 @@
+// This process is responsible for detecting faces in each frame received from process A.
+// The coordinates of all faces in a frame are then forwarded to process B.
+
 #include "names.hpp"
 
 #include <boost/interprocess/sync/named_mutex.hpp>
